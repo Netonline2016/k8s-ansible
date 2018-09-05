@@ -1,0 +1,98 @@
+---
+#- name: Create apiserver ssl directory
+#  file: path={{ apiSSLDir }} owner=root group=root mode=0755 state=directory
+
+#- name: Create bootstrap directory
+#  file: path={{ bootstrapSSLDir }} owner=root group=root mode=0755 state=directory
+
+- name: Transfer master related certificate to nodes
+  copy: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode={{ item.mode }}
+  when: ( order is defined ) and ( order != 1 )
+  with_items:
+    - { src: '{{ masterTempDir }}/temp/apiserver.pem', dest: '{{ apiSSLDir }}', mode: '0644' }
+    - { src: '{{ masterTempDir }}/temp/apiserver-key.pem', dest: '{{ apiSSLDir }}', mode: '0600' }
+    - { src: '{{ masterTempDir }}/temp/controller-manager.pem', dest: '{{ controllerSSLDir }}', mode: '0644' }
+    - { src: '{{ masterTempDir }}/temp/controller-manager-key.pem', dest: '{{ controllerSSLDir }}', mode: '0600' }
+    - { src: '{{ masterTempDir }}/temp/scheduler.pem', dest: '{{ schedulerSSLDir }}', mode: '0644' }
+    - { src: '{{ masterTempDir }}/temp/scheduler-key.pem', dest: '{{ schedulerSSLDir }}', mode: '0600' }
+    - { src: '{{ minionTempDir }}/temp/proxy.pem', dest: '{{ proxySSLDir }}', mode: '0644' }
+    - { src: '{{ minionTempDir }}/temp/proxy-key.pem', dest: '{{ proxySSLDir }}', mode: '0600' }
+
+- name: Transfer *.service and *.conf to nodes
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=0644
+  with_items:
+    - { src: '{{ masterTempDir }}/kube-apiserver.service.j2', dest: '/usr/lib/systemd/system/kube-apiserver.service' }
+    - { src: '{{ masterTempDir }}/kube-apiserver.conf.j2', dest: '{{ kubeDir }}/kube-apiserver.conf' }
+    - { src: '{{ masterTempDir }}/kube-controller-manager.service.j2', dest: '/usr/lib/systemd/system/kube-controller-manager.service' }
+    - { src: '{{ masterTempDir }}/kube-controller-manager.conf.j2', dest: '{{ kubeDir }}/kube-controller-manager.conf' }
+    - { src: '{{ masterTempDir }}/kube-scheduler.service.j2', dest: '/usr/lib/systemd/system/kube-scheduler.service' }
+    - { src: '{{ masterTempDir }}/kube-scheduler.conf.j2', dest: '{{ kubeDir }}/kube-scheduler.conf' }
+    - { src: '{{ masterTempDir }}/token.csv.j2', dest: '{{ bootstrapSSLDir }}/token.csv' }
+
+- name: Transfer kubeconfig.sh to one of the master nodes
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=0755
+  with_items:
+    - { src: '{{ masterTempDir }}/controller-manager-kubeconfig.sh.j2', dest: '{{ controllerSSLDir }}/controller-manager-kubeconfig.sh' }
+    - { src: '{{ masterTempDir }}/scheduler-kubeconfig.sh.j2', dest: '{{ schedulerSSLDir }}/scheduler-kubeconfig.sh' }
+    - { src: '{{ masterTempDir }}/bootstrap-kubeconfig.sh.j2', dest: '{{ bootstrapSSLDir }}/bootstrap-kubeconfig.sh' }
+    - { src: '{{ masterTempDir }}/proxy-kubeconfig.sh.j2', dest: '{{ proxySSLDir }}/proxy-kubeconfig.sh' }
+
+- name: Generate controller.kubeconfig
+  shell: sh controller-manager-kubeconfig.sh warn=False
+  when: ( order is defined ) and ( order == 1 )
+  args:
+    chdir: "{{ controllerSSLDir }}"
+
+- name: Generate scheduler.kubeconfig
+  shell: sh scheduler-kubeconfig.sh warn=False
+  when: ( order is defined ) and ( order == 1 )
+  args:
+    chdir: "{{ schedulerSSLDir }}"
+
+- name: Generate bootstrap.kubeconfig
+  shell: sh bootstrap-kubeconfig.sh warn=False
+  when: ( order is defined ) and ( order == 1 )
+  args:
+    chdir: "{{ bootstrapSSLDir }}"
+
+- name: Generate proxy.kubeconfig
+  shell: sh proxy-kubeconfig.sh warn=False
+  when: ( order is defined ) and ( order == 1 )
+  args:
+    chdir: "{{ proxySSLDir }}"
+
+- name: Fetch kubeconfig from the master node which generate them
+  fetch: src={{ item }}  dest={{ masterTempDir }}/temp/  flat=yes
+  when: ( order is defined ) and ( order == 1 )
+  with_items:
+    - "{{ controllerSSLDir }}/controller-manager.kubeconfig"
+    - "{{ schedulerSSLDir }}/scheduler.kubeconfig"
+    - "{{ bootstrapSSLDir }}/bootstrap.kubeconfig"
+    - "{{ proxySSLDir }}/proxy.kubeconfig"
+
+- name: Distribute kubeconfig to other master nodes (option)
+  copy: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode={{ item.mode }}
+  when: ( order is defined ) and ( order != 1 )
+  with_items:
+    - { src: '{{ masterTempDir }}/temp/controller-manager.kubeconfig', dest: '{{ controllerSSLDir }}', mode: '0644' }
+    - { src: '{{ masterTempDir }}/temp/scheduler.kubeconfig', dest: '{{ schedulerSSLDir }}', mode: '0644' }
+    - { src: '{{ masterTempDir }}/temp/bootstrap.kubeconfig', dest: '{{ bootstrapSSLDir }}', mode: '0644' }
+    - { src: '{{ masterTempDir }}/temp/proxy.kubeconfig', dest: '{{ proxySSLDir }}', mode: '0644' }
+
+- name: Create log directory
+  file: path={{ logDir }}/{{ item }} owner=root group=root mode=0755 state=directory
+  with_items:
+    - apiserver
+    - controller-manager
+    - scheduler
+
+- name: Started services
+  service: name={{ item }} state=started enabled=yes daemon_reload=yes
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+
+- name: Create clusterrolebinding for kubelet-bootstrap user and system:node-bootstrap clusterrole
+  shell: kubectl create clusterrolebinding kubelet-bootstrap --clusterrole=system:node-bootstrapper --user=kubelet-bootstrap warn=False
+  when: ( order is defined ) and ( order == 1 )

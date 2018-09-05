@@ -1,0 +1,10 @@
+#!/bin/bash
+# author: Netonline
+# version: 2018-8-17 v0.1
+
+# compile and install
+{{ binDir }}/etcdctl --endpoints={% for host in groups['etcd'] %}https://{{ host }}:2379{% if not loop.last %},{% endif %}{% endfor %} \
+--ca-file={{ caSSLDir }}/ca.pem \
+--cert-file={{ flannelSSLDir }}/flannel.pem \
+--key-file={{ flannelSSLDir }}/flannel-key.pem \
+set /kubernetes/network/config '{"Network":"{{ CLUSTER_CIDR }}", "SubnetLen": 24, "Backend": {"Type": "vxlan"}}'

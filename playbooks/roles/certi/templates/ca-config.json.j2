@@ -1,0 +1,19 @@
+{
+    "signing": {
+        "default": {
+            "expiry": "{{ certiTime }}"
+        },
+        "profiles": {
+            "kubernetes": {
+                "expiry": "{{ certiTime }}",
+                "usages": [
+                    "signing",
+                    "key encipherment",
+                    "server auth",
+                    "client auth"
+                ]
+            }
+        }
+    }
+}
+

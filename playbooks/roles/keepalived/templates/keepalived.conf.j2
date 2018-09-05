@@ -1,0 +1,40 @@
+! Configuration File for keepalived
+
+global_defs {
+   notification_email {
+     root@localhost.local
+   }
+   
+   notification_email_from root@localhost.local
+   smtp_server {{ ansible_default_ipv4.address }}
+   smtp_connect_timeout 30
+
+   router_id Kubernetes_HA
+}
+
+   vrrp_script chk_haproxy {
+       script "/usr/local/keepalived/etc/chk_haproxy.sh"
+       interval 2
+       weight 2
+       rise 1
+}
+
+vrrp_instance VI_1 {
+    state BACKUP
+    interface {{ ansible_default_ipv4.interface }}
+    virtual_router_id 11
+    priority 101
+    advert_int 1
+    nopreempt
+    authentication {
+        auth_type PASS
+        auth_pass kubernetes@ha
+    }
+    virtual_ipaddress {
+        {{ vip }}
+        }
+
+    track_script {
+        chk_haproxy
+    }
+}

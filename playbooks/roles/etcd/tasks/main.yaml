@@ -1,0 +1,24 @@
+---
+- name: Transfer etcd binary to nodes
+  synchronize: src={{ etcdTempDir }}/{{ item }} dest={{ binDir }}
+  with_items:
+    - etcd
+    - etcdctl
+
+- name: Transfer etcd related certificate to etcd nodes
+  copy: src={{ item.src }} dest={{ etcdSSLDir }} owner=root group=root mode={{ item.mode }}
+  with_items:
+    - { src: '{{ etcdTempDir }}/temp/etcd.pem', mode: '0644' }
+    - { src: '{{ etcdTempDir }}/temp/etcd-key.pem', mode: '0600' }
+
+- name: Create etcd data directory
+  file: path=/var/lib/etcd owner=root group=root mode=0755 state=directory
+
+- name: Transfer etcd.service and etcd.conf to nodes
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=0644
+  with_items:
+    - { src: '{{ etcdTempDir }}/etcd.service.j2', dest: '/usr/lib/systemd/system/etcd.service' }
+    - { src: '{{ etcdTempDir }}/etcd.conf.j2', dest: '{{ etcdDir }}/etcd.conf' }
+
+- name: Started etcd
+  service: name=etcd state=started enabled=yes daemon_reload=yes

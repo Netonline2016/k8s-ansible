@@ -1,0 +1,27 @@
+---
+- name: Transfer keepalived.tar.gz to nodes
+  synchronize: src={{ keepalivedTempDir }}/keepalived.tar.gz dest=/usr/local/src/keepalived.tar.gz
+
+- name: Transfer keepalived.init to nodes
+#  synchronize: src={{ keepalivedTempDir }}/keepalived.init dest=/etc/rc.d/init.d/keepalived
+  copy: src={{ keepalivedTempDir }}/keepalived.init dest=/etc/rc.d/init.d/keepalived owner=root group=root mode=0755
+
+#- name: Run keepalived.sh to install keepalived, and the script at ansible-master
+#  script: "{{ keepalivedTempDir }}/keepalived.sh"
+
+- name: Transfer keepaived.sh to nodes
+#  synchronize: src={{ keepalivedTempDir }}/keepalived.sh dest=/usr/local/src/keepalived.sh
+  copy: src={{ keepalivedTempDir }}/keepalived.sh dest=/usr/local/src/keepalived.sh owner=root group=root mode=0755
+
+- name: Run keepalived.sh to install keepalived
+  shell: sh /usr/local/src/keepalived.sh
+
+- name: Transfer keepalived.conf to nodes
+  template: src={{ keepalivedTempDir }}/keepalived.conf.j2 dest=/usr/local/keepalived/etc/keepalived/keepalived.conf
+
+- name: Transfer keepalived detection script to nodes
+#  synchronize: src={{ keepalivedTempDir }}/chk_haproxy.sh dest=/usr/local/keepalived/etc/chk_haproxy.sh
+  copy: src={{ keepalivedTempDir }}/chk_haproxy.sh dest=/usr/local/keepalived/etc/chk_haproxy.sh owner=root group=root mode=0755
+
+- name: Restart keepalived
+  service: name=keepalived state=restarted enabled=yes

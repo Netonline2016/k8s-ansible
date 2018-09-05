@@ -1,0 +1,23 @@
+{
+    "CN": "system:kube-controller-manager",
+    "hosts": [
+{% for host in groups['master'] %}
+        "{{ host }}"{% if not loop.last %},
+{% endif %}
+{% endfor %}
+
+    ],
+    "key": {
+        "algo": "rsa",
+        "size": 2048
+    },
+    "names": [
+        {
+            "C": "{{ Country }}",
+            "ST": "{{ State }}",
+            "L": "{{ City }}",
+            "O": "system:kube-controller-manager",
+            "OU": "{{ OU }}"
+        }
+    ]
+}

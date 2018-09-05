@@ -1,0 +1,5 @@
+FLANNELD_ARGS="-etcd-cafile={{ caSSLDir }}/ca.pem \
+  -etcd-certfile={{ flannelSSLDir }}/flannel.pem \
+  -etcd-keyfile={{ flannelSSLDir }}/flannel-key.pem \
+  -etcd-endpoints={% for host in groups['etcd'] %}https://{{ host }}:2379{% if not loop.last %},{% endif %}{% endfor %} \
+  -etcd-prefix=/kubernetes/network"

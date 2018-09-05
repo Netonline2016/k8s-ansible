@@ -1,0 +1,14 @@
+KUBELET_ARGS="--address={{ ansible_default_ipv4.address }} \
+  --hostname-override={{ ansible_default_ipv4.address }} \
+  --pod-infra-container-image=netonline/pause-amd64:3.0 \
+  --bootstrap-kubeconfig={{ bootstrapSSLDir }}/bootstrap.kubeconfig \
+  --kubeconfig={{ bootstrapSSLDir }}/kubelet.kubeconfig \
+  --cert-dir={{ bootstrapSSLDir }} \
+  --cluster-dns={{ CLUSTER_DNS_SVC_IP }} \
+  --cluster-domain=cluster.local. \
+  --allow-privileged=true \
+  --serialize-image-pulls=false \
+  --fail-swap-on=false \
+  --logtostderr=false \
+  --log-dir={{ logDir }}/kubelet \
+  --v=2"

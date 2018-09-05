@@ -1,0 +1,156 @@
+#全局配置, 用于设定义全局参数, 属于进程级的配置, 通常与操作系统配置有关.
+global
+    #定义全局日志, 配置在本地, 通过local0 输出, 默认是info级别，可配置两条
+    log         127.0.0.1 local0 info
+    #定义日志级别【error warning info debug】
+    #log         127.0.0.1 local1 info
+    
+    #运行路径
+    chroot      /usr/local/haproxy
+    #PID 文件存放路径
+    pidfile     /usr/local/haproxy/var/run/haproxy.pid
+    
+    #设置每haproxy进程的最大并发连接数, 其等同于命令行选项“-n”; “ulimit -n”自动计算的结果参照此参数设定.
+    maxconn     4096
+    
+    #运行haproxy 用户, 或者使用关键字uid
+    user        haproxy
+    #运行haproxy 用户组, 或者使用关键字gid
+    group       haproxy
+    
+    #后台运行haproxy
+    daemon
+
+    #设置启动的haproxy进程数量, 只能用于守护进程模式的haproxy;
+    #默认只启动一个进程, 鉴于调试困难等多方面的原因, 一般只在单进程仅能打开少数文件描述符的场景中才使用多进程模式.
+    nbproc      1
+    #设置每进程所能够打开的最大文件描述符数目, 默认情况其会自动进行计算, 因此不推荐修改此选项.
+    #ulimit-n 819200 
+    
+    #调试级别, 一般只在开启单进程时调试, 且生产环境禁用.
+    #debug
+    #haproxy启动后不会显示任何相关信息, 这与在命令行启动haproxy时加上参数“-q”相同
+    #quiet
+    
+    #定义统计信息保存位置
+    stats socket /usr/local/haproxy/stats
+
+#默认配置    
+defaults
+    #默认的模式【tcp:4层； http:7层； health:只返回OK】
+    mode        http
+    
+    #继承全局的日志定义输出
+    log         global
+    
+    #如果后端服务器需要记录客户端真实ip, 需要在HTTP请求中添加”X-Forwarded-For”字段;
+    #但haproxy自身的健康检测机制访问后端服务器时, 不应将记录访问日志，可用except来排除127.0.0.0，即haproxy本身.
+    #option      forwardfor except 127.0.0.0/8
+    option      forwardfor 
+
+    #开启http协议中服务器端关闭功能, 每个请求完毕后主动关闭http通道, 使得支持长连接，使得会话可以被重用，使得每一个日志记录都会被记录.
+    option      httpclose 
+
+    #如果产生了一个空连接，那这个空连接的日志将不会记录.
+    option      dontlognull
+
+    #当与后端服务器的会话失败(服务器故障或其他原因)时, 把会话重新分发到其他健康的服务器上; 当故障服务器恢复时, 会话又被定向到已恢复的服务器上;
+    #还可以用”retries”关键字来设定在判定会话失败时的尝试连接的次数
+    option      redispatch
+    retries     3
+    
+    #当haproxy负载很高时, 自动结束掉当前队列处理比较久的链接.
+    option      abortonclose
+
+    #默认http请求超时时间
+    timeout http-request    10s
+    #默认队列超时时间, 后端服务器在高负载时, 会将haproxy发来的请求放进一个队列中. 
+    timeout queue           1m
+    #haproxy与后端服务器连接超时时间.
+    timeout connect         5s
+    #客户端与haproxy连接后, 数据传输完毕, 不再有数据传输, 即非活动连接的超时时间.
+    timeout client          1m
+    #haproxy与后端服务器非活动连接的超时时间.
+    timeout server          1m
+    #默认新的http请求连接建立的超时时间，时间较短时可以尽快释放出资源，节约资源.
+    timeout http-keep-alive 10s
+    #心跳检测超时时间
+    timeout check           10s
+    
+    #最大并发连接数
+    maxconn                 2000
+    
+    #设置默认的负载均衡方式
+    #balance source 
+    #balnace leastconn
+
+#统计页面配置, frontend和backend的组合体, 监控组的名称可按需自定义
+listen admin_status
+    #配置监控运行模式
+    mode http
+    
+    #配置统计页面访问端口
+    bind 0.0.0.0:1080
+    
+    #统计页面默认最大连接数
+    maxconn 10
+    
+    #http日志格式
+    option httplog 
+    
+    #开启统计
+    stats enable
+    
+    #隐藏统计页面上的haproxy版本信息
+    stats hide-version
+    
+    #监控页面自动刷新时间
+    stats refresh 30s
+    
+    #统计页面访问url
+    stats uri /stats
+    
+    #统计页面密码框提示文本
+    stats realm Kubernetes\ Haproxy
+    
+    #监控页面的用户和密码:admin, 可设置多个用户名
+    stats auth admin:admin
+    
+    #手工启动/禁用后端服务器, 可通过web管理节点
+    stats admin if TRUE
+
+    #设置haproxy错误页面
+    errorfile 400 /usr/local/haproxy/errorfiles/400.http
+    errorfile 403 /usr/local/haproxy/errorfiles/403.http
+    errorfile 408 /usr/local/haproxy/errorfiles/408.http
+    errorfile 500 /usr/local/haproxy/errorfiles/500.http
+    errorfile 502 /usr/local/haproxy/errorfiles/502.http
+    errorfile 503 /usr/local/haproxy/errorfiles/503.http
+    errorfile 504 /usr/local/haproxy/errorfiles/504.http
+
+#frontend, 名字自定义
+frontend kube-api-https_frontend
+    #定义前端监听端口, 建议采用bind *:80的形式，否则做集群高可用的时候有问题，vip切换到其余机器就不能访问.
+    bind *:6443
+
+    mode tcp
+    
+    #如果以上规则都不匹配时，将请求转交到default_backend组处理.
+    default_backend kube-api-https_backend
+
+#backend后端配置, 配置php_server组与html_server组
+backend kube-api-https_backend
+
+    #定义负载均衡方式为roundrobin方式, 即基于权重进行轮询调度的算法, 在服务器性能分布较均匀情况下推荐.
+    balance roundrobin
+
+    mode tcp
+    #基于源地址实现持久连接.
+    stick-table type ip size 200k expire 30m
+    stick on src
+
+    #后端服务器定义, maxconn 1024表示该服务器的最大连接数, cookie 1表示serverid为1, weight代表权重(默认1，最大为265，0则表示不参与负载均衡), 
+    #check inter 1500是检测心跳频率, rise 2是2次正确认为服务器可用, fall 3是3次失败认为服务器不可用.
+{% for host in groups['master'] %}
+    server {{ hostvars[host].name }} {{ host }}:16443 maxconn 1024 cookie 1 weight 3 check inter 1500 rise 2 fall 3
+{% endfor %}

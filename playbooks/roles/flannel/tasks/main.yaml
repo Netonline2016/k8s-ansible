@@ -1,0 +1,41 @@
+---
+- name: In case the master separate from minion, create flannel/ssl directory if it doesn't exist
+  file: path={{ flannelSSLDir }} owner=root group=root mode=0755 state=directory
+
+- name: Transfer flannel binary and docker script to nodes
+  synchronize: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: '{{ flannelTempDir }}/flanneld', dest: '{{ binDir }}' }
+    - { src: '{{ flannelTempDir }}/mk-docker-opts.sh', dest: '{{ flannelDir }}' }
+
+- name: Transfer flannel related certificate to nodes
+  copy: src={{ item.src }} dest={{ flannelSSLDir }} owner=root group=root mode={{ item.mode }}
+  with_items:
+    - { src: '{{ flannelTempDir }}/temp/flannel.pem', mode: '0644' }
+    - { src: '{{ flannelTempDir }}/temp/flannel-key.pem', mode: '0600' }
+
+- name: In case the master&minion separate from etcd-cluster, transfer etcdctl to master&minion if it doesn't exit
+  synchronize: src={{ etcdTempDir }}/etcdctl dest={{ binDir }}
+  
+- name: Transfer flannel.sh to one of the master nodes
+  template: src={{ flannelTempDir }}/flannel.sh.j2 dest={{ flannelDir }}/flannel.sh
+  when: ( order is defined ) and ( order == 1 )
+
+- name: Write the netwrok information to etcd-cluster
+  shell: sh {{ flannelDir }}/flannel.sh
+  when: ( order is defined ) and ( order == 1 )
+
+- name: Transfer flannel.service and flannel.conf to nodes
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=0644
+  with_items:
+    - { src: '{{ flannelTempDir }}/flanneld.service.j2', dest: '/usr/lib/systemd/system/flanneld.service' }
+    - { src: '{{ flannelTempDir }}/flanneld.conf.j2', dest: '{{ flannelDir }}/flanneld.conf' }
+
+- name: Create flannel subnet information directory
+  shell: mkdir -p /run/flannel warn=False
+
+- name: Create flannel subnet information file which is writed by mk-docker-opts.sh
+  shell: touch /run/flannel/docker warn=False
+
+- name: Started flanneld
+  service: name=flanneld state=started enabled=yes daemon_reload=yes

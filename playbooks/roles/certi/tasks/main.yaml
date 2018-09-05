@@ -1,0 +1,145 @@
+---
+#- name: create environmental variable
+#  file: path=/etc/profile.d/kubernetes_path.sh owner=root group=root mode=0644
+#
+#- name: fill up environmental variable
+#  shell: echo "export PATH=$PATH:{{ binDir }}/cfssl:{{ binDir }}/etcd:{{ binDir }}/kubernetes/bin:{{ binDir }}/flannel" > /etc/profile.d/kubernetes_path.sh
+
+#- name: load environmental variable
+#  shell: source /etc/profile
+
+#- name: Create cfssl working directory
+#  file: path={{ binDir }}/cfssl owner=root group=root mode=0755 state=directory 
+
+- name: Transfer cfssl binary to kube master nodes
+  copy: src={{ item.src }} dest={{ item.dest }} owner={{ item.owner }} group={{ item.group }} mode={{ item.mode }}
+  with_items:
+    - { src: '{{ certiTempDir }}/cfssl_linux-amd64', dest: '{{ binDir }}/cfssl', owner: 'root', group: 'root', mode: '0755' }
+    - { src: '{{ certiTempDir }}/cfssl-certinfo_linux-amd64', dest: '{{ binDir }}/cfssl-certinfo', owner: 'root', group: 'root', mode: '0755' }
+    - { src: '{{ certiTempDir }}/cfssljson_linux-amd64', dest: '{{ binDir }}/cfssljson', owner: 'root', group: 'root', mode: '0755' }
+
+- name: Transfer kubernetes binary to nodes
+  synchronize: src={{ certiTempDir }}/{{ item }} dest={{ binDir }}
+  with_items:
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+    - kubectl
+    - kubelet
+    - kube-proxy
+
+- name: Create kubernetes/ssl directory
+  file: path={{ item }} owner=root group=root mode=0755 state=directory
+  with_items:
+    - "{{ caSSLDir }}"
+    - "{{ adminSSLDir }}"
+    - "{{ etcdSSLDir }}"
+    - "{{ flannelSSLDir }}"
+    - "{{ apiSSLDir }}"
+    - "{{ controllerSSLDir }}"
+    - "{{ schedulerSSLDir }}"
+    - "{{ bootstrapSSLDir }}"
+    - "{{ proxySSLDir }}"
+
+- name: Transfer ca-config and csr to master node
+  template: src={{ item.src }} dest={{ item.dest }}
+  with_items:
+    - { src: '{{ certiTempDir }}/ca-config.json.j2', dest: '{{ caSSLDir }}/ca-config.json' }
+    - { src: '{{ certiTempDir }}/ca-csr.json.j2', dest: '{{ caSSLDir }}/ca-csr.json' } 
+    - { src: '{{ adminTempDir }}/admin-csr.json.j2', dest: '{{ adminSSLDir }}/admin-csr.json' } 
+    - { src: '{{ etcdTempDir }}/etcd-csr.json.j2', dest: '{{ etcdSSLDir }}/etcd-csr.json' } 
+    - { src: '{{ flannelTempDir }}/flannel-csr.json.j2', dest: '{{ flannelSSLDir }}/flannel-csr.json' } 
+    - { src: '{{ masterTempDir }}/apiserver-csr.json.j2', dest: '{{ apiSSLDir }}/apiserver-csr.json' } 
+    - { src: '{{ masterTempDir }}/controller-manager-csr.json.j2', dest: '{{ controllerSSLDir }}/controller-manager-csr.json' } 
+    - { src: '{{ masterTempDir }}/scheduler-csr.json.j2', dest: '{{ schedulerSSLDir }}/scheduler-csr.json' } 
+    - { src: '{{ minionTempDir }}/proxy-csr.json.j2', dest: '{{ proxySSLDir }}/proxy-csr.json' } 
+
+- name: Create CA at one of the master nodes
+  shell: cfssl gencert -initca ca-csr.json | cfssljson -bare ca
+  when: ( order is defined ) and ( order == 1 ) 
+  args:
+    chdir: "{{ caSSLDir }}"
+
+- name: Create admin certificate at one of the master nodes
+  shell: cfssl gencert -ca={{ caSSLDir }}/ca.pem -ca-key={{ caSSLDir }}/ca-key.pem -config={{ caSSLDir }}/ca-config.json -profile=kubernetes admin-csr.json | cfssljson -bare admin
+  when: ( order is defined ) and ( order == 1 ) 
+  args:
+    chdir: "{{ adminSSLDir }}"
+
+- name: Create etcd certificate at one of the master nodes
+  shell: cfssl gencert -ca={{ caSSLDir }}/ca.pem -ca-key={{ caSSLDir }}/ca-key.pem -config={{ caSSLDir }}/ca-config.json -profile=kubernetes etcd-csr.json | cfssljson -bare etcd
+  when: ( order is defined ) and ( order == 1 ) 
+  args:
+    chdir: "{{ etcdSSLDir }}"
+
+- name: Create flannel certificate at one of the master nodes
+  shell: cfssl gencert -ca={{ caSSLDir }}/ca.pem -ca-key={{ caSSLDir }}/ca-key.pem -config={{ caSSLDir }}/ca-config.json -profile=kubernetes flannel-csr.json | cfssljson -bare flannel
+  when: ( order is defined ) and ( order == 1 ) 
+  args:
+    chdir: "{{ flannelSSLDir }}"
+
+- name: Create apiserver certificate at one of the master nodes
+  shell: cfssl gencert -ca={{ caSSLDir }}/ca.pem -ca-key={{ caSSLDir }}/ca-key.pem -config={{ caSSLDir }}/ca-config.json -profile=kubernetes apiserver-csr.json | cfssljson -bare apiserver
+  when: ( order is defined ) and ( order == 1 ) 
+  args:
+    chdir: "{{ apiSSLDir }}"
+
+- name: Create controller certificate at one of the master nodes
+  shell: cfssl gencert -ca={{ caSSLDir }}/ca.pem -ca-key={{ caSSLDir }}/ca-key.pem -config={{ caSSLDir }}/ca-config.json -profile=kubernetes controller-manager-csr.json | cfssljson -bare controller-manager
+  when: ( order is defined ) and ( order == 1 ) 
+  args:
+    chdir: "{{ controllerSSLDir }}"
+
+- name: Create scheduler certificate at one of the master nodes
+  shell: cfssl gencert -ca={{ caSSLDir }}/ca.pem -ca-key={{ caSSLDir }}/ca-key.pem -config={{ caSSLDir }}/ca-config.json -profile=kubernetes scheduler-csr.json | cfssljson -bare scheduler
+  when: ( order is defined ) and ( order == 1 ) 
+  args:
+    chdir: "{{ schedulerSSLDir }}"
+
+- name: Create kube-proxy certificate at one of the master nodes
+  shell: cfssl gencert -ca={{ caSSLDir }}/ca.pem -ca-key={{ caSSLDir }}/ca-key.pem -config={{ caSSLDir }}/ca-config.json -profile=kubernetes proxy-csr.json | cfssljson -bare proxy
+  when: ( order is defined ) and ( order == 1 ) 
+  args:
+    chdir: "{{ proxySSLDir }}"
+
+#- name: tar for certificates
+#  shell: tar czf ca.tar.gz ca.csr ca.pem ca-key.pem warn=False
+#  when: ( order is defined ) and ( order == 1 )
+#  args:
+#    chdir: "{{ caSSLDir }}"
+
+- name: Fetch certificates from the master node which generate them
+#  fetch: src={{ caSSLDir }}/ca.tar.gz  dest={{ certiTempDir }}/  flat=yes
+  fetch: src={{ item.src }}  dest={{ item.dest }}  flat=yes
+  when: ( order is defined ) and ( order == 1 )
+  with_items:
+    - { src: '{{ caSSLDir }}/ca.csr', dest: '{{ certiTempDir }}/temp/' }
+    - { src: '{{ caSSLDir }}/ca.pem', dest: '{{ certiTempDir }}/temp/' }
+    - { src: '{{ caSSLDir }}/ca-key.pem', dest: '{{ certiTempDir }}/temp/' }
+    - { src: '{{ adminSSLDir }}/admin.pem', dest: '{{ adminTempDir }}/temp/' }
+    - { src: '{{ adminSSLDir }}/admin-key.pem', dest: '{{ adminTempDir }}/temp/' }
+    - { src: '{{ etcdSSLDir }}/etcd.pem', dest: '{{ etcdTempDir }}/temp/' }
+    - { src: '{{ etcdSSLDir }}/etcd-key.pem', dest: '{{ etcdTempDir }}/temp/' }
+    - { src: '{{ flannelSSLDir }}/flannel.pem', dest: '{{ flannelTempDir }}/temp/' }
+    - { src: '{{ flannelSSLDir }}/flannel-key.pem', dest: '{{ flannelTempDir }}/temp/' }
+    - { src: '{{ apiSSLDir }}/apiserver.pem', dest: '{{ masterTempDir }}/temp/' }
+    - { src: '{{ apiSSLDir }}/apiserver-key.pem', dest: '{{ masterTempDir }}/temp/' }
+    - { src: '{{ controllerSSLDir }}/controller-manager.pem', dest: '{{ masterTempDir }}/temp/' }
+    - { src: '{{ controllerSSLDir }}/controller-manager-key.pem', dest: '{{ masterTempDir }}/temp/' }
+    - { src: '{{ schedulerSSLDir }}/scheduler.pem', dest: '{{ masterTempDir }}/temp/' }
+    - { src: '{{ schedulerSSLDir }}/scheduler-key.pem', dest: '{{ masterTempDir }}/temp/' }
+    - { src: '{{ proxySSLDir }}/proxy.pem', dest: '{{ minionTempDir }}/temp/' }
+    - { src: '{{ proxySSLDir }}/proxy-key.pem', dest: '{{ minionTempDir }}/temp/' }
+
+- name: Distribute certificates to other master nodes
+#  copy: src={{ certiTempDir }}/ca.tar.gz dest={{ caSSLDir }}
+  copy: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode={{ item.mode }}
+  when: ( order is defined ) and ( order != 1 )
+  with_items:
+    - { src: '{{ certiTempDir }}/temp/ca.csr', dest: '{{ caSSLDir }}', mode: '0644' }
+    - { src: '{{ certiTempDir }}/temp/ca.pem', dest: '{{ caSSLDir }}', mode: '0644' }
+    - { src: '{{ certiTempDir }}/temp/ca-key.pem', dest: '{{ caSSLDir }}', mode: '0600' }
+
+#- name: untar for certificates
+#  unarchive: src={{ caSSLDir }}/ca.tar.gz dest={{ caSSLDir }} copy=no
+#  when: ( order is defined ) and ( order != 1 )

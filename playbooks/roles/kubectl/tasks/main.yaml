@@ -1,0 +1,33 @@
+---
+#- name: Transfer kubernetes binary to nodes
+#  synchronize: src={{ adminTempDir }}/{{ item }} dest={{ binDir }}
+#  with_items:
+#    - kube-apiserver
+#    - kube-controller-manager
+#    - kube-scheduler
+#    - kubectl
+#    - kubelet
+#    - kube-proxy
+
+- name: Transfer kubectl admin certificate to kubectl-client
+  copy: src={{ item.src }} dest={{ adminSSLDir }} owner=root group=root mode={{ item.mode }}
+  when: ( order is defined ) and ( order != 1 )
+  with_items:
+    - { src: '{{ adminTempDir }}/temp/admin.pem', mode: '0644' }
+    - { src: '{{ adminTempDir }}/temp/admin-key.pem', mode: '0600' }
+
+- name: Generate kubectl kubeconfig file
+  shell: kubectl config set-cluster kubernetes --certificate-authority={{ caSSLDir }}/ca.pem --embed-certs=true --server=https://{{ vip }}:6443 --kubeconfig=admin.conf && kubectl config set-credentials admin --client-certificate={{ adminSSLDir }}/admin.pem --embed-certs=true --client-key={{ adminSSLDir }}/admin-key.pem --kubeconfig=admin.conf && kubectl config set-context admin@kubernetes --cluster=kubernetes --user=admin --kubeconfig=admin.conf && kubectl config use-context admin@kubernetes --kubeconfig=admin.conf warn=False
+  when: ( order is defined ) and ( order == 1 )
+  args:
+    chdir: "{{ adminSSLDir }}"
+
+- name: Fetch kubectl kubeconfig file
+  fetch: src={{ adminSSLDir }}/admin.conf  dest={{ adminTempDir }}/temp/  flat=yes
+  when: ( order is defined ) and ( order == 1 )
+
+- name: Create ~/.kube directory
+  file: path=~/.kube owner=root group=root mode=0755 state=directory
+
+- name: Distribute certificates to master nodes
+  copy: src={{ adminTempDir }}/temp/admin.conf dest=~/.kube/config owner=root group=root mode=0600

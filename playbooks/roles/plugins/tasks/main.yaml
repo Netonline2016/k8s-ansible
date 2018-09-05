@@ -1,0 +1,40 @@
+---
+- name: Create plugins dir
+  file: path={{ kubeDir }}/manifests/{{ item }} owner=root group=root mode=0755 state=directory
+  with_items:
+    - kubedns
+    - dashboard
+    - heapster
+
+- name: Transfer yaml to nodes
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=0644
+  with_items:
+    - { src: '{{ pluginsTempDir }}/kubedns/kube-dns.yaml.j2', dest: '{{ kubeDir }}/manifests/kubedns/kube-dns.yaml' }
+    - { src: '{{ pluginsTempDir }}/dashboard/dashboard.yaml.j2', dest: '{{ kubeDir }}/manifests/dashboard/dashboard.yaml' }
+    - { src: '{{ pluginsTempDir }}/heapster/heapster-rbac.yaml.j2', dest: '{{ kubeDir }}/manifests/heapster/heapster-rbac.yaml' }
+    - { src: '{{ pluginsTempDir }}/heapster/heapster.yaml.j2', dest: '{{ kubeDir }}/manifests/heapster/heapster.yaml' }
+    - { src: '{{ pluginsTempDir }}/heapster/influxdb.yaml.j2', dest: '{{ kubeDir }}/manifests/heapster/influxdb.yaml' }
+    - { src: '{{ pluginsTempDir }}/heapster/grafana.yaml.j2', dest: '{{ kubeDir }}/manifests/heapster/grafana.yaml' }
+
+- name: Started kube-dns
+  shell: kubectl create -f kube-dns.yaml
+  when: ( order is defined ) and ( order == 1 )
+  args:
+    chdir: "{{ kubeDir }}/manifests/kubedns"
+
+- name: Started dashboard
+  shell: kubectl create -f dashboard.yaml
+  when: ( order is defined ) and ( order == 1 )
+  args:
+    chdir: "{{ kubeDir }}/manifests/dashboard"
+
+- name: Started heapster
+  shell: kubectl create -f {{ item }}
+  when: ( order is defined ) and ( order == 1 )
+  with_items:
+    - heapster-rbac.yaml
+    - heapster.yaml
+    - influxdb.yaml
+    - grafana.yaml
+  args:
+    chdir: "{{ kubeDir }}/manifests/heapster"

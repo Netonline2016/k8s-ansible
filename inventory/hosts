@@ -1,0 +1,31 @@
+# 将角色以主机组区分；
+# 主机组名请勿修改；
+# 主机组中ip即区分主机，ip根据规划修改；其余主机变量如"name","order"等请勿修改；
+# 注意格式，为ini格式，1行代表1个主机
+[ntp_servers]
+172.20.0.252
+
+[haproxy]
+172.30.200.51 name=ipvs01
+172.30.200.52 name=ipvs02
+172.30.200.53 name=ipvs03
+
+[keepalived]
+172.30.200.51
+172.30.200.52
+172.30.200.53
+
+[etcd]
+172.30.200.51 name=etcd01
+172.30.200.52 name=etcd02
+172.30.200.53 name=etcd03
+
+[minion]
+172.30.200.51 name=kubeminion01
+172.30.200.52 name=kubeminion02
+172.30.200.53 name=kubeminion03
+
+[master]
+172.30.200.51 name=kubemaster01 order=1
+172.30.200.52 name=kubemaster02 order=2
+172.30.200.53 name=kubemaster03 order=3

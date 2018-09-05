@@ -1,0 +1,32 @@
+---
+- name: Transfer haproxy.tar.gz to nodes
+  synchronize: src={{ haproxyTempDir }}/haproxy.tar.gz dest=/usr/local/src/haproxy.tar.gz
+
+#- name: Run haproxy.sh to install haproxy, and the script at ansible-master
+#  script: "{{ haproxyTempDir }}/haproxy.sh"
+
+- name: Transfer haproxy.sh to nodes
+#  synchronize: src={{ haproxyTempDir }}/haproxy.sh dest=/usr/local/src/haproxy.sh
+  copy: src={{ haproxyTempDir }}/haproxy.sh dest=/usr/local/src/haproxy.sh owner=root group=root mode=0755
+
+- name: Run haproxy.sh to install haproxy
+  shell: sh /usr/local/src/haproxy.sh
+
+- name: Transfer haproxy.cfg to nodes
+  template: src={{ haproxyTempDir }}/haproxy.cfg.j2 dest=/usr/local/haproxy/etc/haproxy.cfg
+
+- name: Transfer haproxy.conf which is for rsyslog
+#  synchronize: src={{ haproxyTempDir }}/haproxy.conf dest=/etc/rsyslog.d/haproxy.conf
+  copy: src={{ haproxyTempDir }}/haproxy.conf dest=/etc/rsyslog.d/haproxy.conf owner=root group=root mode=0644
+
+- name: Modify haproxy.cfg owner&group
+  file: path=/usr/local/haproxy/etc/haproxy.cfg owner=haproxy group=haproxy
+
+- name: Modify haproxy.conf owner&group
+  file: path=/etc/rsyslog.d/haproxy.conf owner=haproxy group=haproxy
+
+- name: Restart service
+  service: name={{ item }} state=restarted enabled=yes
+  with_items:
+    - rsyslog
+    - haproxy

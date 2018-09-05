@@ -1,0 +1,6 @@
+KUBE_SCHEDULER_ARGS="--master=https://{{ vip }}:6443 \
+  --kubeconfig={{ schedulerSSLDir }}/scheduler.kubeconfig \
+  --leader-elect=true \
+  --logtostderr=false \
+  --log-dir={{ logDir }}/scheduler \
+  --v=2"

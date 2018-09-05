@@ -1,0 +1,66 @@
+---
+- name: Initialization Environment
+  hosts: 
+    haproxy
+    keepalived
+    etcd
+    minion
+    master
+  roles:
+    - initenv
+
+- name: Deploy HA for Haproxy
+  hosts:
+    haproxy
+  roles:
+    - haproxy
+
+- name: Deploy HA for Keepalived
+  hosts:
+    keepalived
+  roles:
+    - keepalived
+
+- name: Generate Kubernetes Certificate
+  hosts:
+    master
+  roles:
+    - certi
+    - kubectl
+
+- name: Deploy Etcd Cluster
+  hosts:
+    etcd
+  roles:
+    - etcd
+
+- name: Deploy Flannel
+  hosts:
+    master
+    minion
+  roles:
+    - flannel
+
+- name: Deploy Docker
+  hosts:
+    minion
+  roles:
+    - docker
+
+- name: Deploy Kubernetes Master
+  hosts:
+    master
+  roles:
+    - master
+
+- name: Deploy Kubernetes Minion
+  hosts:
+    minion
+  roles:
+    - minion
+
+- name: Deploy Kubernetes Plugins
+  hosts:
+    master
+  roles:
+    - plugins

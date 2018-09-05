@@ -1,0 +1,98 @@
+# keepalived vip，根据规划修改！
+vip: "172.30.200.50"
+
+# docker version，根据版本要求修改，请注意与"~/k8s-ansible/download.sh"中的"DOCKER_VER"变量保持一致！
+DOCKER_VER: "18.06.1.ce-3.el7"
+
+# docker mirrior，根据需要修改，国内建议采用daocloud或者aliyu的镜像加速！
+DOCKER_MIRROR: "http://0453a5b2.m.daocloud.io"
+
+# init temp directory，请勿修改！！！
+initTempDir: "~/k8s-ansible/playbooks/roles/initenv/templates"
+
+# haproxy temp directory，请勿修改！！！
+haproxyTempDir: "~/k8s-ansible/playbooks/roles/haproxy/templates" 
+
+# keepalived temp directory，请勿修改！！！
+keepalivedTempDir: "~/k8s-ansible/playbooks/roles/keepalived/templates" 
+
+# certification temp directory，请勿修改！！！
+certiTempDir: "~/k8s-ansible/playbooks/roles/certi/templates" 
+
+# admin temp directory，请勿修改！！！
+adminTempDir: "~/k8s-ansible/playbooks/roles/kubectl/templates" 
+
+# etcd temp directory，请勿修改！！！
+etcdTempDir: "~/k8s-ansible/playbooks/roles/etcd/templates" 
+
+# flannel temp directory，请勿修改！！！
+flannelTempDir: "~/k8s-ansible/playbooks/roles/flannel/templates" 
+
+# docker temp directory，请勿修改！！！
+dockerTempDir: "~/k8s-ansible/playbooks/roles/docker/templates" 
+
+# master temp directory，请勿修改！！！
+masterTempDir: "~/k8s-ansible/playbooks/roles/master/templates" 
+
+# minion temp directory，请勿修改！！！
+minionTempDir: "~/k8s-ansible/playbooks/roles/minion/templates" 
+
+# plugins temp directory，请勿修改！！！
+pluginsTempDir: "~/k8s-ansible/playbooks/roles/plugins/templates" 
+
+# define kubernetes related services working directory，请勿修改！！！
+binDir: "/usr/local/bin"
+
+# define services related parameters root directory，请勿修改！！！
+kubeDir: "/etc/kubernetes"
+etcdDir: "/etc/etcd"
+flannelDir: "/etc/flannel"
+
+# define kubernetes ssl related directory，请勿修改！！！
+caSSLDir: "/etc/kubernetes/ssl"
+adminSSLDir: "/etc/kubernetes/admin"
+etcdSSLDir: "/etc/etcd/ssl"
+flannelSSLDir: "/etc/flannel/ssl"
+apiSSLDir: "/etc/kubernetes/apiserver"
+controllerSSLDir: "/etc/kubernetes/controller-manager"
+schedulerSSLDir: "/etc/kubernetes/scheduler"
+bootstrapSSLDir: "/etc/kubernetes/bootstrap"
+proxySSLDir: "/etc/kubernetes/proxy"
+
+# log directory，请勿随意修改！
+logDir: "/var/log/kubernetes"
+
+# define CA vaild time，定义签名证书有效期，根据需要修改，此处定义为10年，建议此值勿设置太短！
+certiTime: "87600h"
+
+# define CA information，建议根据客户信息修改！
+#CommonName: "kubernetes"
+Country: "CN"
+State: "SiChuan"
+City: "ChengDu"
+Organization: "k8s"
+OU: "system"
+
+# POD subnet，根据规划修改，如果与客户环境不冲突，可不修改！
+CLUSTER_CIDR: "10.254.0.0/16"
+
+# service subnet，根据规划修改，如果与客户环境不冲突，可不修改！
+SERVICE_CIDR: "169.169.0.0/16"
+
+# nodeport range，根据规划修改，如无必要，建议不修改！
+NODE_PORT_RANGE: "10000-60000"
+
+# kubernetes service ip, it's the first ip of servicer subnet usually，根据"SERVICE_CIDR"变量修改，一般取子网的第一个可用ip!
+CLUSTER_KUBERNETES_SVC_IP: "169.169.0.1"
+
+# dns, from servicer subnet，根据"SERVICE_CIDR"变量修改，取子网任意可用ip即可，建议与"CLUSTER_KUBERNETES_SVC_IP"之间预留部分ip!
+CLUSTER_DNS_SVC_IP: "169.169.0.11"
+
+# stub domains，存根域dns地址，为集群访问外部服务做dns解析，需要根据规划修改！
+STUB_DNS_IP: "100.64.139.16"
+
+# dns domain，请勿随意修改！！！
+#CLUSTER_DNS_DOMAIN: "cluster.local."
+
+# tls bootstrapping, a random number: head -c 16 /dev/urandom | od -An -t x | tr -d ' ',如需要变更，生成随机数替换即可！
+BOOTSTRAP_TOKEN: "3ac045e945e0b804ff7b5f673246dd86"

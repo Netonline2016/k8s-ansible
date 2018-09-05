@@ -1,0 +1,17 @@
+KUBE_CONTROLLER_MANAGER_ARGS="--master=https://{{ vip }}:6443 \
+  --kubeconfig={{ controllerSSLDir }}/controller-manager.kubeconfig \
+  --allocate-node-cidrs=true \
+  --service-cluster-ip-range={{ SERVICE_CIDR }} \
+  --cluster-cidr={{ CLUSTER_CIDR }} \
+  --cluster-name=kubernetes \
+  --cluster-signing-cert-file={{ caSSLDir }}/ca.pem \
+  --cluster-signing-key-file={{ caSSLDir }}/ca-key.pem \
+  --service-account-private-key-file={{ caSSLDir }}/ca-key.pem \
+  --root-ca-file={{ caSSLDir }}/ca.pem \
+  --insecure-experimental-approve-all-kubelet-csrs-for-group=system:bootstrappers \
+  --use-service-account-credentials=true \
+  --controllers=*,bootstrapsigner,tokencleaner \
+  --leader-elect=true \
+  --logtostderr=false \
+  --log-dir={{ logDir }}/controller-manager \
+  --v=2  1>>{{ logDir }}/kube-controller-manager.log 2>&1"

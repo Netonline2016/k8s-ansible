@@ -1,0 +1,29 @@
+---
+- name: Set up the stable docker-ce repository
+  get_url: url=https://download.docker.com/linux/centos/docker-ce.repo dest=/etc/yum.repos.d/docker-ce.repo
+
+- name: Transfer docker rpm to minion
+  synchronize: src={{ dockerTempDir }}/{{ item }} dest=/usr/local/src
+  with_items:
+    - docker-ce-{{ DOCKER_VER }}.x86_64.rpm
+#    - docker-ce-selinux-{{ DOCKER_VER }}.noarch.rpm
+
+- name: Install docker
+  shell: yum localinstall -y docker-ce* warn=False
+  args:
+    chdir: /usr/local/src
+
+#- name: Install docker-ce
+#  yum: name=docker-ce-{{ DOCKER_VER }} state=present  
+
+- name: Create docker parameter directory
+  file: path=/etc/docker owner=root group=root mode=0755 state=directory
+
+- name: Transfer docker.service and daemon.json to nodes
+  template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=0644
+  with_items:
+    - { src: '{{ dockerTempDir }}/docker.service.j2', dest: '/usr/lib/systemd/system/docker.service' }
+    - { src: '{{ dockerTempDir }}/daemon.json.j2', dest: '/etc/docker/daemon.json' }
+
+- name: Started docker
+  service: name=docker state=started enabled=yes daemon_reload=yes

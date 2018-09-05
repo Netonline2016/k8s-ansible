@@ -1,0 +1,14 @@
+[Unit]
+Description=Kubernetes Controller Manager
+Documentation=https://github.com/GoogleCloudPlatform/kubernetes
+After=network.target
+After=kube-apiserver.service
+
+[Service]
+EnvironmentFile={{ kubeDir }}/kube-controller-manager.conf
+ExecStart={{ binDir }}/kube-controller-manager $KUBE_CONTROLLER_MANAGER_ARGS
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
