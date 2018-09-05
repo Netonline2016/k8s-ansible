@@ -26,7 +26,6 @@ restrict ::1
 #server 1.cn.pool.ntp.org iburst
 #server 2.cn.pool.ntp.org iburst
 #server 3.cn.pool.ntp.org iburst
-#server 172.20.0.252 iburst
 {% for host in groups['ntp_servers'] %}
 server {{ host }} iburst
 {% endfor %}

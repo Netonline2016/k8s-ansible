@@ -7,9 +7,6 @@
 
 - name: Disable selinux forever
 #  shell: sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config && sed -i "s/SELINUXTYPE=targeted/#SELINUXTYPE=targeted/g" /etc/selinux/config warn=False
-# Using lineinfile or template module rather than running sed, but "duplicate dict key" for lineinfile, will using last defined value only.
-#  lineinfile: path=/etc/selinux/config regexp="^SELINUX=enforcing" line="SELINUX=disabled" backup=yes
-#  lineinfile: path=/etc/selinux/config regexp="^SELINUXTYPE=targeted" line="#SELINUXTYPE=targeted" backup=yes
   lineinfile: path=/etc/selinux/config regexp={{ item.regexp }} line={{ item.line }} backup=yes
   with_items:
     - {'regexp': '"^SELINUX=enforcing"', 'line': '"SELINUX=disabled"'}
@@ -78,8 +75,8 @@
     - { 'name': 'iptables', 'state': 'stopped', 'enabled': 'no' }
     - { 'name': 'NetworkManager', 'state': 'stopped', 'enabled': 'no' }
   
-- name: Add hosts
-  shell: echo -e "\n#cmop-registry\n113.142.30.117   cmop-registry" >> /etc/hosts
+#- name: Add hosts
+#  shell: echo -e "\n#cmop-registry\n113.142.30.117   cmop-registry" >> /etc/hosts
 
 - name: Transfer ntp.conf to nodes
   template: src={{ initTempDir }}/ntp.conf.j2 dest=/etc/ntp.conf
