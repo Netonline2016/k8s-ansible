@@ -1,7 +1,7 @@
 # 采用ansible部署高可用kubernetes集群
 
 ## 说明
-本文档指导采用二进制包的方式快速部署CMOP基础环境高可用kubernetes集群。
+本文档指导采用二进制包的方式快速部署高可用kubernetes集群。
 
 参考：[高可用kubernetes集群](https://www.cnblogs.com/netonline/tag/kubernetes/)
 
