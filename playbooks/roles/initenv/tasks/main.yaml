@@ -9,8 +9,8 @@
 #  shell: sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config && sed -i "s/SELINUXTYPE=targeted/#SELINUXTYPE=targeted/g" /etc/selinux/config warn=False
   lineinfile: path=/etc/selinux/config regexp={{ item.regexp }} line={{ item.line }} backup=yes
   with_items:
-    - {'regexp': '"^SELINUX=enforcing"', 'line': '"SELINUX=disabled"'}
-    - {'regexp': '"^SELINUXTYPE=targeted"', 'line': '"#SELINUXTYPE=targeted"'}
+    - {'regexp': '^SELINUX=enforcing', 'line': 'SELINUX=disabled'}
+    - {'regexp': '^SELINUXTYPE=targeted', 'line': '#SELINUXTYPE=targeted'}
 
 #- name: Transfer yum repository to nodes
 #  synchronize: src={{ initTempDir }}/{{ item }} dest=/etc/yum.repos.d/{{ item }}
