@@ -2,15 +2,19 @@
 - name: Modify the hostname 
   shell: hostname {{ name | quote }} && echo {{ name | quote }}  > /etc/hostname
 
-- name: Disable selinux
-  shell: /usr/sbin/setenforce 0
+#- name: Disable selinux
+#  shell: /usr/sbin/setenforce 0
 
-- name: Disable selinux forever
+- name: Change SELinux state
+# solution-1:
 #  shell: sed -i "s/SELINUX=enforcing/SELINUX=disabled/g" /etc/selinux/config && sed -i "s/SELINUXTYPE=targeted/#SELINUXTYPE=targeted/g" /etc/selinux/config warn=False
-  lineinfile: path=/etc/selinux/config regexp={{ item.regexp }} line={{ item.line }} backup=yes
-  with_items:
-    - {'regexp': '^SELINUX=enforcing', 'line': 'SELINUX=disabled'}
-    - {'regexp': '^SELINUXTYPE=targeted', 'line': '#SELINUXTYPE=targeted'}
+# solution-2:
+#  lineinfile: path=/etc/selinux/config regexp={{ item.regexp }} line={{ item.line }} backup=yes
+#  with_items:
+#    - {'regexp': '^SELINUX=enforcing', 'line': 'SELINUX=disabled'}
+#    - {'regexp': '^SELINUXTYPE=targeted', 'line': '#SELINUXTYPE=targeted'}
+# solution-3:
+  selinux: state=disabled policy=targeted
 
 #- name: Transfer yum repository to nodes
 #  synchronize: src={{ initTempDir }}/{{ item }} dest=/etc/yum.repos.d/{{ item }}
