@@ -7,7 +7,7 @@ After=kube-apiserver.service
 [Service]
 EnvironmentFile={{ kubeDir }}/kube-scheduler.conf
 ExecStart={{ binDir }}/kube-scheduler $KUBE_SCHEDULER_ARGS
-Restart=on-failure
+Restart=always
 RestartSec=5
 
 [Install]

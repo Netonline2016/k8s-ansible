@@ -8,7 +8,7 @@ Requires=docker.service
 WorkingDirectory=/var/lib/kubelet
 EnvironmentFile={{ kubeDir }}/kubelet.conf
 ExecStart={{ binDir }}/kubelet $KUBELET_ARGS
-Restart=on-failure
+Restart=always
 RestartSec=5
 
 [Install]

@@ -10,7 +10,7 @@ Type=notify
 WorkingDirectory=/var/lib/etcd/
 EnvironmentFile={{ etcdDir }}/etcd.conf
 ExecStart={{ binDir }}/etcd $ETCD_ARGS
-Restart=on-failure
+Restart=always
 RestartSec=5
 LimitNOFILE=65536
 

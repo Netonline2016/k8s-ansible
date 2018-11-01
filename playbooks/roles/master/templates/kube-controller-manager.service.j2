@@ -7,7 +7,7 @@ After=kube-apiserver.service
 [Service]
 EnvironmentFile={{ kubeDir }}/kube-controller-manager.conf
 ExecStart={{ binDir }}/kube-controller-manager $KUBE_CONTROLLER_MANAGER_ARGS
-Restart=on-failure
+Restart=always
 RestartSec=5
 
 [Install]

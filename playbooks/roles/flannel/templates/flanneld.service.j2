@@ -12,7 +12,8 @@ Type=notify
 EnvironmentFile={{ flannelDir }}/flanneld.conf
 ExecStart={{ binDir }}/flanneld $FLANNELD_ARGS
 ExecStartPost={{ flannelDir }}/mk-docker-opts.sh -k DOCKER_NETWORK_OPTIONS -d /run/flannel/docker
-Restart=on-failure
+Restart=always
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target
