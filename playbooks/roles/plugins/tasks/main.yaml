@@ -2,25 +2,37 @@
 - name: Create plugins dir
   file: path={{ kubeDir }}/manifests/{{ item }} owner=root group=root mode=0755 state=directory
   with_items:
-    - kubedns
+    #- kubedns
+    - coredns
     - dashboard
     - heapster
 
 - name: Transfer yaml to nodes
   template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=0644
   with_items:
-    - { src: '{{ pluginsTempDir }}/kubedns/kube-dns.yaml.j2', dest: '{{ kubeDir }}/manifests/kubedns/kube-dns.yaml' }
+    #- { src: '{{ pluginsTempDir }}/kubedns/kube-dns.yaml.j2', dest: '{{ kubeDir }}/manifests/kubedns/kube-dns.yaml' }
+    - { src: '{{ pluginsTempDir }}/coredns/coredns-cm.yaml.j2', dest: '{{ kubeDir }}/manifests/coredns/coredns-cm.yaml' }
+    - { src: '{{ pluginsTempDir }}/coredns/coredns.yaml.j2', dest: '{{ kubeDir }}/manifests/coredns/coredns.yaml' }
     - { src: '{{ pluginsTempDir }}/dashboard/dashboard.yaml.j2', dest: '{{ kubeDir }}/manifests/dashboard/dashboard.yaml' }
     - { src: '{{ pluginsTempDir }}/heapster/heapster-rbac.yaml.j2', dest: '{{ kubeDir }}/manifests/heapster/heapster-rbac.yaml' }
     - { src: '{{ pluginsTempDir }}/heapster/heapster.yaml.j2', dest: '{{ kubeDir }}/manifests/heapster/heapster.yaml' }
     - { src: '{{ pluginsTempDir }}/heapster/influxdb.yaml.j2', dest: '{{ kubeDir }}/manifests/heapster/influxdb.yaml' }
     - { src: '{{ pluginsTempDir }}/heapster/grafana.yaml.j2', dest: '{{ kubeDir }}/manifests/heapster/grafana.yaml' }
 
-- name: Started kube-dns
-  shell: kubectl create -f kube-dns.yaml
+#- name: Started kube-dns
+#  shell: kubectl create -f kube-dns.yaml
+#  when: ( order is defined ) and ( order == 1 )
+#  args:
+#    chdir: "{{ kubeDir }}/manifests/kubedns"
+
+- name: Started coredns
+  shell: kubectl create -f {{ item }}
   when: ( order is defined ) and ( order == 1 )
+  with_items:
+    - coredns-cm.yaml
+    - coredns.yaml
   args:
-    chdir: "{{ kubeDir }}/manifests/kubedns"
+    chdir: "{{ kubeDir }}/manifests/coredns"
 
 - name: Started dashboard
   shell: kubectl create -f dashboard.yaml

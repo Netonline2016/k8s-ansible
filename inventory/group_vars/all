@@ -88,11 +88,20 @@ CLUSTER_KUBERNETES_SVC_IP: "169.169.0.1"
 # dns, from servicer subnet，根据"SERVICE_CIDR"变量修改，取子网任意可用ip即可，建议与"CLUSTER_KUBERNETES_SVC_IP"之间预留部分ip!
 CLUSTER_DNS_SVC_IP: "169.169.0.11"
 
-# stub domains，存根域dns地址，为集群访问外部服务做dns解析，需要根据规划修改！
-STUB_DNS_IP: "100.64.139.16"
+# kube-dns, stub domains，存根域dns地址，为集群访问外部服务做dns解析，需要根据规划修改！
+#STUB_DNS_IP: "100.64.139.16"
+
+# coredns, configmap的upstream&proxy参数，为集群访问internet服务做dns解析，一般不需要修改！使用upstream或proxy参数需要同步变更coredns-cm.yaml.j2模版！
+#UPSTREAM: "114.114.114.114"
+#PROXY: "223.5.5.5"
 
 # dns domain，请勿随意修改！！！
 #CLUSTER_DNS_DOMAIN: "cluster.local."
+
+# coredns, configmap的host插件，kubernetes集群内部访问部分在集群之外的服务，需要根据规划修改！使用host插件需要同步变更coredns-cm.yaml.j2模版！
+#MYSQL: "100.64.139.21"
+#ETCD: "100.64.139.17"
+#LOGSTASH: "100.64.139.26"
 
 # tls bootstrapping, a random number: head -c 16 /dev/urandom | od -An -t x | tr -d ' ',如需要变更，生成随机数替换即可！
 BOOTSTRAP_TOKEN: "3ac045e945e0b804ff7b5f673246dd86"
