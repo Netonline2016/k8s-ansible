@@ -3,11 +3,11 @@
 # Date: 2018-8-17 v0.1
 
 # 如果对各基础组件有版本要求，可根据需要在此处修改，前提是文件服务器"http://113.142.30.231:10074"已上传相关版本
-export HAPROXY_VER=1.8.13
-export KEEPALIVED_VER=2.0.6
+export HAPROXY_VER=1.8.14
+export KEEPALIVED_VER=2.0.10
 export CFSSL_VER=R1.2
-export K8S_VER=v1.11.2
-export ETCD_VER=v3.3.9
+export K8S_VER=v1.11.4
+export ETCD_VER=v3.3.10
 export DOCKER_VER=18.06.1.ce-3.el7
 export FLANNEL_VER=v0.10.0
 
@@ -93,7 +93,7 @@ else
     echo -e "\033[31m [ERROR]Download flannel Failed! \033[0m";
 fi
 
-# untar tlannel
+# untar flannel
 tar -zxvf ~/k8s-ansible/playbooks/roles/flannel/templates/flannel-linux-amd64.tar.gz -C ~/k8s-ansible/playbooks/roles/flannel/templates
 
 # docker
