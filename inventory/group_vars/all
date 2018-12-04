@@ -80,7 +80,7 @@ CLUSTER_CIDR: "10.254.0.0/16"
 SERVICE_CIDR: "169.169.0.0/16"
 
 # nodeport range，根据规划修改，如无必要，建议不修改！
-NODE_PORT_RANGE: "10000-60000"
+NODE_PORT_RANGE: "30000-60000"
 
 # kubernetes service ip, it's the first ip of servicer subnet usually，根据"SERVICE_CIDR"变量修改，一般取子网的第一个可用ip!
 CLUSTER_KUBERNETES_SVC_IP: "169.169.0.1"
