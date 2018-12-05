@@ -6,6 +6,7 @@
     - coredns
     - dashboard
     - heapster
+    - ingress
 
 - name: Transfer yaml to nodes
   template: src={{ item.src }} dest={{ item.dest }} owner=root group=root mode=0644
@@ -18,6 +19,8 @@
     - { src: '{{ pluginsTempDir }}/heapster/heapster.yaml.j2', dest: '{{ kubeDir }}/manifests/heapster/heapster.yaml' }
     - { src: '{{ pluginsTempDir }}/heapster/influxdb.yaml.j2', dest: '{{ kubeDir }}/manifests/heapster/influxdb.yaml' }
     - { src: '{{ pluginsTempDir }}/heapster/grafana.yaml.j2', dest: '{{ kubeDir }}/manifests/heapster/grafana.yaml' }
+    - { src: '{{ pluginsTempDir }}/ingress/mandatory.yaml.j2', dest: '{{ kubeDir }}/manifests/ingress/mandatory.yaml' }
+    - { src: '{{ pluginsTempDir }}/ingress/ingress-demo.yaml.j2', dest: '{{ kubeDir }}/manifests/ingress/ingress-demo.yaml' }
 
 #- name: Started kube-dns
 #  shell: kubectl create -f kube-dns.yaml
@@ -50,3 +53,12 @@
     - grafana.yaml
   args:
     chdir: "{{ kubeDir }}/manifests/heapster"
+
+- name: Started ingress-controller
+  shell: kubectl create -f {{ item }}
+  when: ( order is defined ) and ( order == 1 )
+  with_items:
+    - mandatory.yaml
+    #- ingress-demo.yaml
+  args:
+    chdir: "{{ kubeDir }}/manifests/ingress"

@@ -21,6 +21,7 @@
 |heapster|v1.5.4|本文档默认采用v1.5.4版本|
 |influxdb|v1.5.2|本文档默认采用v1.5.2版本|
 |grafana|v5.0.4|本文档默认采用v5.0.4版本|
+|nginx-ingress-controller|0.21.0|本文档默认采用0.21.0版本,以Daemonset的方式部署|
 
 ## 逻辑拓扑
 ![](pics/kubernetes-cmop.png)
