@@ -6,7 +6,7 @@
 export HAPROXY_VER=1.8.14
 export KEEPALIVED_VER=2.0.10
 export CFSSL_VER=R1.2
-export K8S_VER=v1.11.4
+export K8S_VER=v1.12.3
 export ETCD_VER=v3.3.10
 export DOCKER_VER=18.06.1.ce-3.el7
 export FLANNEL_VER=v0.10.0
