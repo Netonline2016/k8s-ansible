@@ -15,13 +15,13 @@
 |cfssl|R1.2|版本可选，本文档默认采用R.12版本|
 |etcd|v3.3.10|版本可选，本文档默认采用v3.3.10版本|
 |flannel|v0.10.0|版本可选，本文档默认采用v0.10.0版本|
-|kubernetes|v1.11.4|版本可选，本文档默认采用v1.11.4版本|
+|kubernetes|v1.12.3|版本可选，本文档默认采用v1.12.3版本|
 |coredns|1.2.6|本文档默认采用1.2.6版本|
 |dashboard|1.10.0|本文档默认采用1.10.0版本|
 |heapster|v1.5.4|本文档默认采用v1.5.4版本|
 |influxdb|v1.5.2|本文档默认采用v1.5.2版本|
 |grafana|v5.0.4|本文档默认采用v5.0.4版本|
-|nginx-ingress-controller|0.21.0|本文档默认采用0.21.0版本,以Daemonset的方式部署|
+|nginx-ingress-controller|0.21.0|本文档默认采用0.21.0版本,以DaemonSet的方式下发Pod|
 
 ## 逻辑拓扑
 ![](pics/kubernetes-cmop.png)
