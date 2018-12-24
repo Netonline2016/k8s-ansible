@@ -11,27 +11,20 @@ data:
         errors
         health
         #hosts {
-        #    {{ MYSQL }}   cmop-mysql
-        #    {{ ETCD }}   cmop-etcd
-        #    {{ LOGSTASH }}  cmop-logstash
+        #    {{ ETCD }}   etcd
         #    fallthrough
         #}
         kubernetes cluster.local in-addr.arpa ip6.arpa {
             pods insecure
-        #    upstream {{ UPSTREAM }}
+        #    upstream {{ UPSTREAM1 }}
             upstream
             fallthrough in-addr.arpa ip6.arpa
         }
         prometheus :9153
-        #proxy . {{ PROXY }}
+        #proxy . {{ UPSTREAM2 }}
         proxy . /etc/resolv.conf
         cache 30
         loop
         reload
         loadbalance
     }
-#    out.kubernetes:53 {
-#        errors
-#        cache 30
-#        proxy . 172.30.200.201
-#    }
