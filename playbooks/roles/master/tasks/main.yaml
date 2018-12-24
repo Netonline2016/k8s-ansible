@@ -87,7 +87,7 @@
     - scheduler
 
 - name: Started services
-  service: name={{ item }} state=started enabled=yes daemon_reload=yes
+  service: name={{ item }} state=restarted enabled=yes daemon_reload=yes
   with_items:
     - kube-apiserver
     - kube-controller-manager

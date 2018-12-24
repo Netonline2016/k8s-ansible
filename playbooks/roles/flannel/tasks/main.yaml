@@ -38,4 +38,4 @@
   shell: touch /run/flannel/docker warn=False
 
 - name: Started flanneld
-  service: name=flanneld state=started enabled=yes daemon_reload=yes
+  service: name=flanneld state=restarted enabled=yes daemon_reload=yes

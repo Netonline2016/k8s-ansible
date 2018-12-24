@@ -26,4 +26,4 @@
     - { src: '{{ dockerTempDir }}/daemon.json.j2', dest: '/etc/docker/daemon.json' }
 
 - name: Started docker
-  service: name=docker state=started enabled=yes daemon_reload=yes
+  service: name=docker state=restarted enabled=yes daemon_reload=yes
